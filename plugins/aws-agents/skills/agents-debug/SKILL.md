@@ -9,7 +9,9 @@ description: >
   "read traces", "broken", "500 error", "424 error", "model access
   denied", "command not found", "stuck in DELETING", "maxVms exceeded",
   "cold start diagnosis", "cold start slow", "agentcore create error",
-  "create failed", "exit code 7", "connection refused local dev".
+  "create failed", "exit code 7", "connection refused local dev",
+  "requires an interactive terminal", "agentcore dev non-interactive",
+  "dev --logs", "no tty", "headless dev server".
   Not for deploy failures — use agents-deploy. Not for performance
   tuning without errors — use agents-optimize. Not for VPC
   configuration — use agents-build. Not for observability setup or
@@ -333,6 +335,25 @@ agentcore status --type memory
 ```
 
 **Initialization timeout:** The agent takes too long to be ready for its first request — heavy imports at module level, synchronous database connections, or MCP client initialization during startup can exceed the service's health-check window. The symptom looks like a 424 on the first invoke but healthy on subsequent ones. Fix: move expensive setup out of module level, use lazy initialization, or warm the agent before production traffic. See `agents-harden` Initialization time section for patterns.
+
+---
+
+## Symptom: "This command requires an interactive terminal"
+
+`agentcore dev` exits immediately with this error when it cannot detect a TTY. Common contexts where this happens:
+
+- Running inside a CI/CD job (GitHub Actions, CodeBuild, Jenkins)
+- Launching from an IDE terminal or editor plugin that is not a real TTY
+- Starting the dev server from a background process or Docker container
+- Running via a shell that redirects stdin/stdout
+
+**Fix:** pass `--logs` to skip the interactive inspector and run in log-only mode:
+
+```bash
+agentcore dev --logs
+```
+
+The server starts normally (Uvicorn on the default port), prints logs to stdout, and accepts invocations. All local testing that works with `agentcore dev` also works with `agentcore dev --logs`.
 
 ---
 

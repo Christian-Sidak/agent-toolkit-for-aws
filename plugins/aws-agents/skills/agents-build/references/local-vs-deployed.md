@@ -52,11 +52,19 @@ else:
 
 **Credentials work in both, but read from different sources.** The `@requires_api_key` decorator handles this automatically — don't try to read env vars directly.
 
+## Running the dev server without a TTY
+
+`agentcore dev` requires an interactive terminal by default. In CI, containers, or any context without a TTY, the CLI exits with `Error: This command requires an interactive terminal`. Use `--logs` to start the server in log-only mode (no interactive inspector):
+
+```bash
+agentcore dev --logs
+```
+
 ## Testing workflow
 
 Because memory, gateway, and policies don't work locally, the realistic test loop is:
 
-1. **Local:** `agentcore dev` to verify the agent's code structure, framework wiring, system prompt, and any in-code logic
+1. **Local:** `agentcore dev` (or `agentcore dev --logs` in a non-interactive environment) to verify the agent's code structure, framework wiring, system prompt, and any in-code logic
 2. **Deploy to a staging target:** `agentcore deploy --target staging` to test with real memory, gateway, and policies
 3. **Production:** only after staging validation
 

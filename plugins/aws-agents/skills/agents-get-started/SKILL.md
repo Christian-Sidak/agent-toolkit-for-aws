@@ -252,6 +252,18 @@ agentcore dev
 
 This starts a local dev server. The developer can interact with their agent immediately.
 
+**Non-interactive / headless environments:** `agentcore dev` requires a TTY by default. If it is run without one (inside a CI job, an IDE terminal that isn't a real TTY, a Docker container, or a background shell), the CLI exits with:
+
+```
+Error: This command requires an interactive terminal
+```
+
+Add `--logs` to run in log-only mode, which starts the Uvicorn server without the interactive inspector:
+
+```bash
+agentcore dev --logs
+```
+
 **Port the dev server binds to** (important if you're scripting `curl` calls or testing from another process):
 
 | Protocol | Default port |
