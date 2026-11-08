@@ -211,8 +211,9 @@ def test_strands_registers_and_deploys_generated_code(generated):
     assert all(call["cwd"] == str(project) for call in calls[1:])
 
 
-@pytest.mark.parametrize("length,accepted", [(22, True), (23, False)])
+@pytest.mark.parametrize("length,accepted", [(30, True), (31, False)])
 def test_harness_combined_name_limit(generated, length, accepted):
+    # PROJECT_NAME="CustomerA" (9 chars); budget = 40 - 9 - 1 = 30
     source, config, env = generated
     config["name"] = "a" * length
     (source / "harness.json").write_text(json.dumps(config))
@@ -223,8 +224,9 @@ def test_harness_combined_name_limit(generated, length, accepted):
         assert not Path(env["COMMAND_LOG"]).exists()
 
 
-@pytest.mark.parametrize("harness_length,accepted", [(8, True), (9, False)])
+@pytest.mark.parametrize("harness_length,accepted", [(16, True), (17, False)])
 def test_harness_budget_uses_selected_project_name(generated, harness_length, accepted):
+    # PROJECT_NAME has 23 chars; budget = 40 - 23 - 1 = 16
     source, config, env = generated
     env["PROJECT_NAME"] = "P" + "x" * 22
     config["name"] = "a" * harness_length
@@ -234,6 +236,18 @@ def test_harness_budget_uses_selected_project_name(generated, harness_length, ac
     if not accepted:
         assert "exceeds 40 characters" in result.stderr
         assert not Path(env["COMMAND_LOG"]).exists()
+
+
+def test_issue_548_nimbo_support_case_rejected(generated):
+    # Regression: NimboSupportAgentCore (21) + _ + nimbo_support_harness (21) = 43 > 40
+    source, config, env = generated
+    env["PROJECT_NAME"] = "NimboSupportAgentCore"
+    config["name"] = "nimbo_support_harness"
+    (source / "harness.json").write_text(json.dumps(config))
+    result = _run(generated, "harness")
+    assert result.returncode != 0, "43-char combined name must be rejected"
+    assert "exceeds 40 characters" in result.stderr
+    assert not Path(env["COMMAND_LOG"]).exists()
 
 
 @pytest.mark.parametrize("generated", ["research-agent", "Research-Agent_2", "a" * 48], indirect=True)

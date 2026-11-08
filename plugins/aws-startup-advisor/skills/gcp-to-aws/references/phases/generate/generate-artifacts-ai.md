@@ -348,8 +348,9 @@ import json, re, sys
 name = json.load(open(sys.argv[1]))["name"]
 if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*", name):
     raise SystemExit("Harness name must start with a letter and contain only letters, numbers or underscores")
-if len("_".join((sys.argv[2], "default", name))) > 40:
-    raise SystemExit("Combined project/default-target/harness name exceeds 40 characters; choose a shorter name")
+budget = 40 - len(sys.argv[2]) - 1
+if len(name) > budget:
+    raise SystemExit(f"Combined harness physical name \"{sys.argv[2]}_{name}\" exceeds 40 characters; harness name must be {budget} characters or fewer with this project name")
 print(name)
 ' "$CONFIG" "$PROJECT_NAME")
 MODEL_JSON=$(python3 -c 'import json,sys; print(json.dumps(json.load(open(sys.argv[1]))["model"]))' "$CONFIG")
